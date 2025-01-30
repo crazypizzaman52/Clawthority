@@ -1,44 +1,45 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot;
 
-import edu.wpi.first.util.sendable.SendableRegistry;
-import edu.wpi.first.wpilibj.Joystick;
+import edu.wpi.first.wpilibj.PS4Controller;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
-import edu.wpi.first.wpilibj.motorcontrol.PWMSparkMax;
 
-/**
- * This is a demo program showing the use of the DifferentialDrive class, specifically it contains
- * the code necessary to operate a robot with tank drive.
- */
+import com.revrobotics.spark.SparkLowLevel.MotorType;
+import com.revrobotics.spark.SparkMax;
+
 public class Robot extends TimedRobot {
-  private final DifferentialDrive m_robotDrive;
-  private final Joystick m_leftStick;
-  private final Joystick m_rightStick;
+  private DifferentialDrive m_myRobot;
+  private PS4Controller joystick;
+  private static final int leftDeviceID = 1; 
+  private static final int rightDeviceID = 2;
+  private SparkMax m_leftMotor;
+  private SparkMax m_rightMotor;
 
-  private final PWMSparkMax m_leftMotor = new PWMSparkMax(0);
-  private final PWMSparkMax m_rightMotor = new PWMSparkMax(1);
+  @Override
+  public void robotInit() {
+  /**
+   * SPARK MAX controllers are intialized over CAN by constructing a CANSparkMax object
+   * 
+   * The CAN ID, which can be configured using the SPARK MAX Client, is passed as the
+   * first parameter
+   * 
+   * The motor type is passed as the second parameter. Motor type can either be:
+   *  com.revrobotics.CANSparkLowLevel.MotorType.kBrushless
+   *  com.revrobotics.CANSparkLowLevel.MotorType.kBrushed
+   * 
+   * The example below initializes four brushless motors with CAN IDs 1 and 2. Change
+   * these parameters to match your setup
+   */
+    m_leftMotor = new SparkMax(leftDeviceID, MotorType.kBrushless);
+    m_rightMotor = new SparkMax(rightDeviceID, MotorType.kBrushless);
 
-  /** Called once at the beginning of the robot program. */
-  public Robot() {
-    // We need to invert one side of the drivetrain so that positive voltages
-    // result in both sides moving forward. Depending on how your robot's
-    // gearbox is constructed, you might have to invert the left side instead.
-    m_rightMotor.setInverted(true);
+    m_myRobot = new DifferentialDrive(m_leftMotor, m_rightMotor);
 
-    m_robotDrive = new DifferentialDrive(m_leftMotor::set, m_rightMotor::set);
-    m_leftStick = new Joystick(0);
-    m_rightStick = new Joystick(1);
-
-    SendableRegistry.addChild(m_robotDrive, m_leftMotor);
-    SendableRegistry.addChild(m_robotDrive, m_rightMotor);
+    joystick = new PS4Controller(0);
   }
 
   @Override
   public void teleopPeriodic() {
-    m_robotDrive.tankDrive(-m_leftStick.getY(), -m_rightStick.getY());
+    m_myRobot.tankDrive(joystick.getLeftY(), joystick.getRightY());
   }
 }
